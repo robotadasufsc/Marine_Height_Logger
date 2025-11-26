@@ -4,6 +4,7 @@
 // Adapted from https://doi.org/10.3389/fmars.2017.00366
 
 #include <SD.h>
+#include <Wire.h> // Necessário incluir explicitamente para usar setWireTimeout
 
 #include "lidar/common.h"
 #include "gps/common.h"
@@ -12,12 +13,12 @@
 
 // SDcard SPI pins
 #define SPI_CS  10
-/*#define SPI_CLK  15
-#define SPI_MISO 14
-#define SPI_MOSI 16*/
+
+// Debug LED pin
+#define DEBUG_LED_PIN 5
 
 enum ErrorType {
-	ERR_NO_LIDAR = 1,
+	ERR_NO_LIDAR = 2,
 	ERR_NO_GPS_LOCK,
 	ERR_IMU_FAIL,
 	ERR_SD_FAIL,
@@ -37,12 +38,14 @@ static File logfile;
 __ATTR_NORETURN__ void lock_and_report_error(size_t code) {
 	while(1) {  // lock it up, blinking forever
 		for(size_t i = 0; i < code; i++) {
+			digitalWrite(DEBUG_LED_PIN, HIGH);
 			digitalWrite(LED_BUILTIN_RX, HIGH);
 			TXLED0;
-			delay(125);
+			delay(300);
+			digitalWrite(DEBUG_LED_PIN, LOW);
 			digitalWrite(LED_BUILTIN_RX, LOW);
 			TXLED1;
-			delay(125);
+			delay(300);
 		}
 		TXLED0;
 		delay(2000);
@@ -75,6 +78,8 @@ void setup() {
 	// We start the serial object even without debug, or the IMU doesn't work
 	Serial.begin(115200);
 
+	pinMode(DEBUG_LED_PIN, OUTPUT);
+
 #ifdef DEBUG_TO_SERIAL
 	// Careful with this next line, if computer isn't attatched it will hang
 	while(!Serial)  // loop while ProMicro takes a moment to get itself together
@@ -102,6 +107,9 @@ void setup() {
 		lock_and_report_error(ERR_IMU_FAIL);
 	}
 	imu.enableDefault();
+
+	// Se o cabo do IMU falhar, o Arduino nao trava infinitamente
+    Wire.setWireTimeout(3000, true); 
 
 	// see if the card is present and can be initialised
 	if(!SD.begin(SPI_CS)) {
@@ -175,8 +183,11 @@ void setup() {
  * \param lidar_distance The distance read by the lidar, in centimetres.
  * \param imu_results    The results returned by the innertial mesurement unit.
  */
-void write_data_line(Stream &stream, int16_t lidar_distance, const struct IMUData &imu_results, bool report_writing = false) {
-	if(report_writing) TXLED1;  // The Tx LED is not tied to a normally controlled pin so we use this macro
+void write_data_line(Stream &stream, uint16_t lidar_distance, const struct IMUData &imu_results, bool report_writing = false) {
+	if(report_writing) {
+		TXLED1;
+		digitalWrite(DEBUG_LED_PIN, HIGH);
+	}// The Tx LED is not tied to a normally controlled pin so we use this macro
 
 	if(gps.date.isValid()) {
 		u16 year = gps.date.year();
@@ -247,7 +258,10 @@ void write_data_line(Stream &stream, int16_t lidar_distance, const struct IMUDat
 	stream.print(imu_results.gyro_z, 3);
 	stream.println();
 
-	if(report_writing) TXLED0;
+	if(report_writing) {
+		TXLED0;
+		digitalWrite(DEBUG_LED_PIN, LOW);
+	}
 }
 
 #undef __WRITE_GPS_MEASURE__
@@ -269,7 +283,7 @@ void loop(void) {
 			unsigned long delta_t = millis() - first_detected;
 
 			if(delta_t > next_signal) {
-				int16_t lidar_distance = get_lidar_distance_cm();
+				uint16_t lidar_distance = get_lidar_distance_cm();
 
 				get_imu_readings(imu_results);
 
@@ -291,7 +305,7 @@ void loop(void) {
 	// update gps data available scan again to clear the decks
 	consume_gps();
 
-	int16_t lidar_distance = get_lidar_distance_cm();
+	uint16_t lidar_distance = get_lidar_distance_cm();
 
 #ifdef DEBUG_DATA
 	// Printout to USB-serial
