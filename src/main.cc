@@ -170,9 +170,11 @@ void setup() {
 	// Signal we are ready by blinking ten times
 	for(int i = 0; i < 10; i++) {
 		digitalWrite(LED_BUILTIN_RX, LOW);
+		digitalWrite(DEBUG_LED_PIN, LOW);
 		TXLED1;
 		wakeful_delay(100);
 		digitalWrite(LED_BUILTIN_RX, HIGH);
+		digitalWrite(DEBUG_LED_PIN, HIGH);
 		TXLED0;
 		wakeful_delay(100);
 	}
