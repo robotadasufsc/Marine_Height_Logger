@@ -17,6 +17,12 @@
 // Debug LED pin
 #define DEBUG_LED_PIN 5
 
+// Defina uma variável global ou estática
+static int contador_flush = 0;
+
+
+
+
 enum ErrorType {
 	ERR_NO_LIDAR = 2,
 	ERR_NO_GPS_LOCK,
@@ -315,5 +321,12 @@ void loop(void) {
 
 	// write to SD card
 	write_data_line(logfile, lidar_distance, imu_results, true);
-	logfile.flush();
+	//logfile.flush();
+	// Só salva fisicamente no cartão a cada 20 linhas
+	if(contador_flush >= 20) {
+		logfile.flush();
+		contador_flush = 0;
+	} else {
+		contador_flush++;
+	}
 }
