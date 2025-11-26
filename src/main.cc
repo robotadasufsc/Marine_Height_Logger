@@ -275,6 +275,8 @@ void write_data_line(Stream &stream, uint16_t lidar_distance, const struct IMUDa
 void loop(void) {
 	// IMU
 	IMUData imu_results;
+	
+	uint16_t lidar_distance = get_lidar_distance_cm();
 
 	// get GPS string
 	consume_gps();
@@ -289,7 +291,7 @@ void loop(void) {
 			unsigned long delta_t = millis() - first_detected;
 
 			if(delta_t > next_signal) {
-				uint16_t lidar_distance = get_lidar_distance_cm();
+				lidar_distance = get_lidar_distance_cm();
 
 				get_imu_readings(imu_results);
 
@@ -311,7 +313,6 @@ void loop(void) {
 	// update gps data available scan again to clear the decks
 	consume_gps();
 
-	uint16_t lidar_distance = get_lidar_distance_cm();
 
 #ifdef DEBUG_DATA
 	// Printout to USB-serial
