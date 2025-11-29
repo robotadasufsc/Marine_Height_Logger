@@ -2,6 +2,8 @@
 
 This Arduino project logs data
 
+https://cad.onshape.com/documents/8c69aaf7bfe748ac84e2e23f/w/e7e4a977aaaffc7485234cd5/e/c591d70b899bdbf8e2ee1be5?renderMode=0&uiState=692b3cbd730f051df9b74f1f
+
 ## Dependencies
 
 - [TinyGPSPlus](https://docs.arduino.cc/libraries/tinygpsplus/) for the GPS module
@@ -46,4 +48,3 @@ This Arduino project logs data
 ## Notes
 
 The TF02-Pro is set to serial communication by default, it should be set to communicate via I²C with address 0x10.
-
