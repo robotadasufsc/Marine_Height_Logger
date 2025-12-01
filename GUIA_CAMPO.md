@@ -7,7 +7,7 @@ Antes de lacrar a caixa ou lançar o equipamento:
 
 - [ ] **Cartão SD:** Inserido corretamente e formatado (FAT16/FAT32).
 - [ ] **LiDAR:** Lentes limpas (sem sal, poeira ou obstruções).
-- [ ] **Parafusos:** Verificar se todos os farafusos e velcro estão firmes.
+- [ ] **Parafusos:** Verificar se todos os parafusos e velcro estão firmes.
 - [ ] **Bateria:** Carga verificada.
 
 ---
@@ -47,9 +47,10 @@ Se o LED entrar em um padrão repetitivo (pisca X vezes, pausa, repete), consult
 | **5x** | **Cartão SD** | Cartão ausente ou mal encaixado no slot. |
 | **6x** | **Erro de Arquivo** | Falha ao criar arquivo `LOG_xxxx.CSV`. Cartão pode estar cheio, protegido (trava física) ou corrompido. |
 
-Tenatativa de reparo, ligue e desligue o equipamemto algumas vezes dando um intervalo de 1 segundo mínimo entre cada desligameto.
-Tente iniciar o equipamento sem o cartao SD, deixe entrar no loop de erro, desligue, reinsira o cartão e ligue novamente.
-Tente outras combinações desses métodos. 
+Tentativas de reparo:
+* Ligue e desligue o equipamemto algumas vezes dando um intervalo de 1 segundo mínimo entre cada desligameto.
+* Tente iniciar o equipamento sem o cartao SD, deixe entrar no loop de erro, desligue, reinsira o cartão e ligue novamente.
+* Tente outras combinações desses métodos. 
 
 ---
 

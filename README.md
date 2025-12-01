@@ -107,9 +107,9 @@ Este projeto utiliza **PlatformIO**.
    
 2. **Instale as dependências (automático via platformio.ini):**
 
-* `SD`
-* `TinyGPSPlus`
-* `LSM6 (Pololu)`
+* SD
+* TinyGPSPlus
+* LSM6 (Pololu)
 
 3. **Compile e faça o upload:**
     ```Bash
