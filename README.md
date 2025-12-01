@@ -1,85 +1,92 @@
 # 🌊 Marine Height Logger (LidarBox)
 
 ![Status](https://img.shields.io/badge/status-funcional-success)
-![Platform](https://img.shields.io/badge/platform-Arduino_ProMicro-blue)
+![Platform](https://img.shields.io/badge/mcu-Arduino_ProMicro-blue)
 ![License](https://img.shields.io/badge/license-EPL_2.0-red)
 
-**Desenvolvido por:** Robota
+**Desenvolvido por:** Robota da UFSC
 
 ## 📖 Visão Geral
-O **Marine Height Logger** é um instrumento de registro de dados para ambientes marítimos. Ele captura a variação de altura do nível d'água utilizando sensores LiDAR, correlacionando os dados com posicionamento GPS e compensação inercial (IMU).
+O **Marine Height Logger** é um sistema embarcado de alta precisão para monitorar a variação de nível do mar. O dispositivo integra um **LiDAR** para medição de distância, **GPS** para geolocalização e tempo preciso, e um **IMU** para compensação de movimento (Tilt/Roll/Pitch).
 
-Os dados são gravados em formato CSV no cartão SD para análise posterior, contendo carimbos de tempo, coordenadas e leituras dos sensores.
-
-### Principais Funcionalidades
-* **Datalogging Robusto:** Gravação de Data, Hora, GPS, LiDAR e IMU.
-* **Flexibilidade de Hardware:** Suporte nativo para módulos Benewake TF02-Pro e Lightware SF11.
-* **Feedback Visual:** Sistema de notificação de erros e status via LED.
-* **Arquitetura Modular:** Drivers de sensores isolados para fácil manutenção.
+Os dados são processados e salvos em um cartão SD em formato `.CSV` para fácil análise.
 
 ---
 
 ## 🛠️ Hardware e Eletrônica
 
 ### 1. Lista de Componentes (BOM)
-| Componente | Modelo | Função | Protocolo |
+| Componente | Modelo Específico | Função | Protocolo |
 | :--- | :--- | :--- | :--- |
-| **MCU** | Arduino ProMicro (ATmega32u4) | Controle | - |
-| **IMU** | Pololu MinIMU-9 (LSM6) | Acelerômetro/Giroscópio | I²C |
-| **LiDAR** | Benewake TF02-Pro *ou* SF11 | Distância | I²C |
-| **GPS** | EM506 *ou* GT-735T | Posição/Tempo | Serial (UART) |
-| **Armazenamento** | SparkFun SD Breakout | Logging | SPI |
+| **MCU** | Arduino ProMicro (ATmega32u4) | Controle Central | - |
+| **IMU** | Pololu MinIMU-9 v5 (LSM6) | Acelerômetro/Giroscópio | I²C |
+| **LiDAR** | Benewake TF02-Pro *ou* Lightware SF11 | Medição de Altura | I²C |
+| **GPS** | GlobalSat EM-506 *ou* GP-735T | Posição e Relógio | Serial (UART) |
+| **Storage** | SparkFun SD Breakout | Datalogging | SPI |
 
-### 2. Mapa de Conexões (Pinout)
-Conexões baseadas no Arduino ProMicro / Leonardo:
+### 2. Pinagem (Conexões)
+Baseado no firmware atual (`src/main.cc`):
 
-**Barramento I²C (LiDAR + IMU)**
-* **SDA:** Pino `D2`
-* **SCL:** Pino `D3`
-* *Nota:* O TF02 deve estar alimentado com 5V.
+| Módulo | Pino Módulo | Pino Arduino | Observação |
+| :--- | :--- | :--- | :--- |
+| **I²C Bus** | SDA / SCL | **D2 / D3** | LiDAR e IMU compartilham o bus |
+| **GPS** | RX / TX | **TX0 / RX1** | Serial Hardware |
+| **SD Card** | CS | **D10** | Chip Select |
+| **SD Card** | MOSI | **D16** | SPI MOSI |
+| **SD Card** | MISO | **D14** | SPI MISO |
+| **SD Card** | SCK | **D15** | SPI Clock |
 
-**GPS (Serial 1)**
-* **RX (Módulo):** Conectar ao `TX0` do Arduino
-* **TX (Módulo):** Conectar ao `RX1` do Arduino
+> [!WARNING]
+> O **LiDAR TF02-Pro** vem de fábrica em modo Serial. Ele **deve** ser reconfigurado para I²C (endereço `0x10`) antes do uso.
 
-**Cartão SD (SPI)**
-* **CS:** Pino `D10`
-* **MOSI:** Pino `D16`
-* **MISO:** Pino `D14`
-* **SCK:** Pino `D15`
-
-### 3. Diagramas e PCB
-> *Insira aqui uma imagem ou link para o esquemático elétrico*
-> [📂 Ver arquivos de fabricação da PCB (Gerbers)](hardware/pcb)
+> [📂 Ver Esquemático e PCB](hardware/circuit/) | [📦 Ver Modelos 3D do Case](hardware/3d_models/)
 
 ---
 
-## 🖨️ Mecânica e 3D
-O projeto mecânico foi desenvolvido no OnShape para garantir estanqueidade e posicionamento correto dos sensores.
+## 🚥 Tabela de Debug (Códigos de LED)
+Como o dispositivo não possui tela, ele utiliza o LED interno (`LED_BUILTIN_RX`) para comunicar status e erros fatais.
 
-* **Arquivos Fonte:** [Acessar Projeto no OnShape](https://cad.onshape.com/documents/8c69aaf7bfe748ac84e2e23f/w/e7e4a977aaaffc7485234cd5/e/c591d70b899bdbf8e2ee1be5?renderMode=0&uiState=692b3cbd730f051df9b74f1f)
-* **Impressão:** Recomenda-se PETG ou ABS.
+### Inicialização
+* **10 Piscadas Rápidas:** O sistema inicializou com sucesso, detectou todos os sensores e criou o arquivo de log. Está pronto para operar.
+
+### Códigos de Erro (Loop Infinito)
+Se o sistema encontrar uma falha crítica durante o boot, ele travará e piscará o LED repetidamente em sequências:
+
+| Nº de Piscadas | Erro no Código | Significado / Solução |
+| :---: | :--- | :--- |
+| **1x** | `ERR_NO_LIDAR` | **LiDAR não encontrado.** Verifique cabos SDA/SCL e alimentação do sensor. Confirme se está em modo I²C. |
+| **2x** | `ERR_NO_GPS_LOCK` | **Falha no GPS.** O sistema não conseguiu comunicação inicial com o módulo GPS. |
+| **3x** | `ERR_IMU_FAIL` | **IMU não encontrado.** Verifique conexão com o Pololu MinIMU-9. |
+| **4x** | `ERR_SD_FAIL` | **Cartão SD ausente/erro.** Verifique se o cartão está inserido e formatado corretamente. |
+| **5x** | `ERR_SD_CREATE_FAIL` | **Erro de Arquivo.** O cartão foi lido, mas não foi possível criar o arquivo `LOG_XXXX.CSV` (cartão cheio ou protegido contra gravação). |
 
 ---
 
-## 💻 Estrutura do Firmware
+## 📊 Formato dos Dados
+O arquivo gerado (`LOG_0000.CSV`) possui as seguintes colunas:
+1. `gmt_date` (Data GPS)
+2. `gmt_time` (Hora GPS)
+3. `num_sats` (Nº Satélites)
+4. `longitude` / `latitude`
+5. `gps_altitude_m`
+6. `SOG_kt` (Velocidade em nós)
+7. `COG` (Curso sobre o solo)
+8. `HDOP` (Precisão horizontal)
+9. `laser_altitude_cm` (Leitura do LiDAR)
+10. `tilt_deg` (Inclinação)
+11. `accel_x/y/z` (Acelerômetro bruto)
+12. `gyro_x/y/z` (Giroscópio bruto)
 
-O código é estruturado de forma modular em C++ (PlatformIO):
+---
 
-* **`src/main.cc`**: Loop principal. Gerencia a rotina `write_data_line` e tratamento de erros (`lock_and_report_error`).
-* **LiDAR**:
-    * Interface: `src/lidar/common.h`
-    * Drivers: `src/lidar/benewake-tf02.cc` (Endereço 0x10) e `src/lidar/lightware-sf11-c.cc` (Endereço 0x55).
-* **GPS**:
-    * Implementa `TinyGPS++` através dos drivers em `src/gps/`.
-* **IMU**:
-    * Abstração do sensor LSM6 em `src/imu.cc`.
+## 💻 Instalação do Firmware
+Recomendado utilizar **PlatformIO**. As dependências principais são:
+* `SD`
+* `TinyGPSPlus`
+* `LSM6` (Pololu)
 
-### Compilação e Upload
-Este projeto utiliza **PlatformIO**.
-
-1. Instale as dependências (definidas no `platformio.ini`).
-2. Conecte a placa via USB.
-3. Execute:
-   ```bash
-   pio run --target upload
+```bash
+# Clone o repositório e faça o upload
+git clone [https://github.com/robotadasufsc/Marine_Height_Logger.git](https://github.com/robotadasufsc/Marine_Height_Logger.git)
+cd Marine_Height_Logger
+pio run --target upload
