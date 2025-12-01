@@ -4,7 +4,7 @@
 ![Platform](https://img.shields.io/badge/platform-Arduino_ProMicro-blue)
 ![License](https://img.shields.io/badge/license-EPL_2.0-red)
 
-**Desenvolvido por:** Robota da UFSC
+**Desenvolvido por:** Robota
 
 ## 📖 Visão Geral
 O **Marine Height Logger** é um instrumento de registro de dados para ambientes marítimos. Ele captura a variação de altura do nível d'água utilizando sensores LiDAR, correlacionando os dados com posicionamento GPS e compensação inercial (IMU).
